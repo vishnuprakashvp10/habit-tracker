@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Habit } from "@/lib/types";
+import { Habit, HabitFrequency } from "@/lib/types";
 import { useHabits } from "./HabitContext";
 import { HABIT_COLORS, HABIT_EMOJIS, CATEGORIES } from "@/lib/constants";
 import { X } from "lucide-react";
@@ -11,18 +11,27 @@ interface Props {
   editingHabit?: Habit | null;
 }
 
+type FormState = {
+  name: string;
+  emoji: string;
+  color: string;
+  frequency: HabitFrequency;
+  category: string;
+  customDays: number[];
+};
+
 const DEFAULT = {
   name: "",
   emoji: "💪",
   color: HABIT_COLORS[0].value,
-  frequency: "daily" as const,
+  frequency: "daily" as HabitFrequency,
   category: "Health",
   customDays: [] as number[],
 };
 
 export default function AddHabitModal({ open, onClose, editingHabit }: Props) {
   const { addHabit, updateHabit } = useHabits();
-  const [form, setForm] = useState({ ...DEFAULT });
+  const [form, setForm] = useState<FormState>({ ...DEFAULT });
   const [emojiSearch, setEmojiSearch] = useState("");
 
   useEffect(() => {
