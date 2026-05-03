@@ -4,7 +4,7 @@ import { useHabits } from "./HabitContext";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function getDates(count = 14) {
+function getDates(count = 100) {
   const dates: Date[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);

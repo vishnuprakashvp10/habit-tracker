@@ -76,17 +76,32 @@ export function computeStreak(completions: Record<string, boolean>): { streak: n
 }
 
 export function getDateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  // Return date in YYYY-MM-DD format in local timezone
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-export function getLast60Days(): string[] {
+export function getLastNDays(n: number): string[] {
   const days: string[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  for (let i = 59; i >= 0; i--) {
+  for (let i = n - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    days.push(`${year}-${month}-${day}`);
   }
   return days;
+}
+
+export function getLast60Days(): string[] {
+  return getLastNDays(60);
+}
+
+export function getLast100Days(): string[] {
+  return getLastNDays(100);
 }

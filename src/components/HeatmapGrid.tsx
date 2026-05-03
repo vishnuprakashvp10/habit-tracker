@@ -1,5 +1,5 @@
 "use client";
-import { getLast60Days } from "@/lib/storage";
+import { getLast100Days } from "@/lib/storage";
 import { Habit } from "@/lib/types";
 import { useMemo } from "react";
 
@@ -10,7 +10,7 @@ interface Props {
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
 export default function HeatmapGrid({ habit }: Props) {
-  const days = useMemo(() => getLast60Days(), []);
+  const days = useMemo(() => getLast100Days(), []);
 
   // Group into weeks (columns)
   const weeks: string[][] = [];
