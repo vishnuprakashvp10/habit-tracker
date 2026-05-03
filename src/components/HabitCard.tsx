@@ -9,9 +9,10 @@ interface Props {
   habit: Habit;
   onEdit: (habit: Habit) => void;
   reordering?: boolean;
+  onDragOver?: (id: string) => void;
 }
 
-export default function HabitCard({ habit, onEdit, reordering = false }: Props) {
+export default function HabitCard({ habit, onEdit, reordering = false, onDragOver }: Props) {
   const { today, toggleHabit, deleteHabit, getCompletionRate } = useHabits();
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -60,6 +61,10 @@ export default function HabitCard({ habit, onEdit, reordering = false }: Props) 
       draggable={reordering}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (reordering && onDragOver) onDragOver(habit.id);
+      }}
     >
       {/* Top bar */}
       <div className="flex items-center gap-3 p-4 pb-3">

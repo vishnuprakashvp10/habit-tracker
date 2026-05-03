@@ -41,33 +41,22 @@ export default function Home() {
   const dateLabel = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   const [reordering, setReordering] = useState(false);
-  const [dragInfo, setDragInfo] = useState<{ id: string; index: number } | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  function handleDragStart(id: string, index: number) {
-    setDragInfo({ id, index });
+  function handleDragStart(id: string) {
+    setDraggedId(id);
   }
 
-  function handleDragEnd(targetId: string) {
-    if (!dragInfo) return;
-    const targetIndex = filtered.findIndex((h) => h.id === targetId);
-    if (targetIndex === -1 || targetIndex === dragInfo.index) {
-      setDragInfo(null);
-      return;
-    }
-    
-    // Map to full habits indices
-    const draggedHabit = habits.find((h) => h.id === dragInfo.id);
-    const targetHabit = habits.find((h) => h.id === targetId);
-    if (!draggedHabit || !targetHabit) {
-      setDragInfo(null);
-      return;
-    }
-    
-    const draggedFullIdx = habits.findIndex((h) => h.id === dragInfo.id);
-    const targetFullIdx = habits.findIndex((h) => h.id === targetId);
-    
-    reorderHabits(draggedFullIdx, targetFullIdx);
-    setDragInfo(null);
+  function handleDragOver(overId: string) {
+    if (!draggedId || draggedId === overId) return;
+    const draggedIdx = habits.findIndex((h) => h.id === draggedId);
+    const overIdx = habits.findIndex((h) => h.id === overId);
+    if (draggedIdx === -1 || overIdx === -1 || draggedIdx === overIdx) return;
+    reorderHabits(draggedIdx, overIdx);
+  }
+
+  function handleDragEnd() {
+    setDraggedId(null);
   }
 
   return (
@@ -182,12 +171,12 @@ export default function Home() {
                       transition={{ delay: i * 0.04, duration: 0.3 }}
                       drag={reordering}
                       dragConstraints={{ top: 0, bottom: 0 }}
-                      onDragStart={() => reordering && handleDragStart(habit.id, i)}
-                      onDragEnd={() => reordering && handleDragEnd(habit.id)}
+                      onDragStart={() => reordering && handleDragStart(habit.id)}
+                      onDragEnd={handleDragEnd}
                       className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
                       style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
                     >
-                      <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} />
+                      <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} onDragOver={handleDragOver} />
                     </motion.div>
                   ))}
                 </AnimatePresence>

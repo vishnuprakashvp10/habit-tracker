@@ -1,7 +1,7 @@
 "use client";
 import { Habit } from "@/lib/types";
 import { useState, useMemo } from "react";
-import { getDateKey, getLast100Days } from "@/lib/storage";
+import { getDateKey, getNext100Days } from "@/lib/storage";
 
 interface CalendarViewProps {
   habit: Habit;
@@ -25,7 +25,7 @@ export default function CalendarView({ habit }: CalendarViewProps) {
     return days;
   }, []);
 
-  const allDays = useMemo(() => getLast100Days(), []);
+  const allDays = useMemo(() => getNext100Days(), []);
 
   const getWeeks = (days: string[]) => {
     const weeks: string[][] = [];
