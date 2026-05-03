@@ -10,19 +10,22 @@ interface Props {
   onEdit: (habit: Habit) => void;
   reordering?: boolean;
   onDragOver?: (id: string) => void;
+  selectedDate: string;
+  onMoveUp?: (id: string) => void;
+  onMoveDown?: (id: string) => void;
 }
 
-export default function HabitCard({ habit, onEdit, reordering = false, onDragOver }: Props) {
-  const { today, toggleHabit, deleteHabit, getCompletionRate } = useHabits();
+export default function HabitCard({ habit, onEdit, reordering = false, onDragOver, selectedDate, onMoveUp, onMoveDown }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [justChecked, setJustChecked] = useState(false);
-
-  const isDone = !!habit.completions[today];
+  const { today, toggleHabit, deleteHabit, getCompletionRate } = useHabits();
+  const targetDate = selectedDate || today;
+  const isDone = !!habit.completions[targetDate];
   const rate = getCompletionRate(habit);
 
   function handleToggle() {
-    toggleHabit(habit.id, today);
+    toggleHabit(habit.id, targetDate);
     if (!isDone) {
       setJustChecked(true);
       setTimeout(() => setJustChecked(false), 600);
@@ -97,13 +100,47 @@ export default function HabitCard({ habit, onEdit, reordering = false, onDragOve
                 · Best: {habit.bestStreak}
               </span>
             )}
-          </div>
-        </div>
-
-        {!reordering && (
-          <>
-            {/* Check button */}
-            <button
+         </div>
+       </div>
+ 
+       {/* Up/Down buttons for reordering */}
+       {reordering && (
+         <div className="flex flex-col gap-1 px-4 pb-3">
+           <div className="flex gap-1">
+             <button
+               onClick={() => onMoveUp && onMoveUp(habit.id)}
+               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-display transition-all"
+               style={{
+                 background: "rgba(255,255,255,0.06)",
+                 border: "1px solid #2a2a3d",
+                 color: "#6666aa",
+               }}
+               title="Move up"
+             >
+               <ChevronUp size={14} />
+               Up
+             </button>
+             <button
+               onClick={() => onMoveDown && onMoveDown(habit.id)}
+               className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-display transition-all"
+               style={{
+                 background: "rgba(255,255,255,0.06)",
+                 border: "1px solid #2a2a3d",
+                 color: "#6666aa",
+               }}
+               title="Move down"
+             >
+               <ChevronDown size={14} />
+               Down
+             </button>
+           </div>
+         </div>
+       )}
+ 
+       {!reordering && (
+         <>
+           {/* Check button */}
+           <button
               onClick={handleToggle}
               className="relative flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-90"
               style={{

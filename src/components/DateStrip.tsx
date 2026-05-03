@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useEffect } from "react";
 import { useHabits } from "./HabitContext";
+import { getDateKey } from "@/lib/storage";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -8,9 +9,17 @@ function getDates(count = 100) {
   const dates: Date[] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  for (let i = count - 1; i >= 0; i--) {
+  // Show past days and future days (half before, half after today)
+  const pastDays = Math.floor(count / 2);
+  const futureDays = count - pastDays - 1;
+  for (let i = pastDays; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
+    dates.push(d);
+  }
+  for (let i = 1; i <= futureDays; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
     dates.push(d);
   }
   return dates;
@@ -22,23 +31,25 @@ interface Props {
 }
 
 export default function DateStrip({ selectedDate, onSelectDate }: Props) {
-  const dates = getDates(14);
+  const dates = getDates(30);
   const stripRef = useRef<HTMLDivElement>(null);
   const { habits } = useHabits();
 
   useEffect(() => {
-    // Scroll to end (today)
+    // Scroll so today is at the left edge
     if (stripRef.current) {
-      stripRef.current.scrollLeft = stripRef.current.scrollWidth;
+      const todayIndex = 15; // today is at index 15 (15 past days + today)
+      const buttonWidth = 64; // minWidth + gap
+      stripRef.current.scrollLeft = todayIndex * buttonWidth;
     }
   }, []);
 
   return (
     <div ref={stripRef} className="flex gap-2 overflow-x-auto pb-1 scroll-smooth" style={{ scrollbarWidth: "none" }}>
       {dates.map((date) => {
-        const key = date.toISOString().slice(0, 10);
+        const key = getDateKey(date);
         const isSelected = key === selectedDate;
-        const isToday = key === new Date().toISOString().slice(0, 10);
+        const isToday = key === getDateKey(new Date());
         const completedCount = habits.filter((h) => h.completions[key]).length;
         const total = habits.length;
         const allDone = total > 0 && completedCount === total;

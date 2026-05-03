@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useHabits } from "@/components/HabitContext";
 import HabitCard from "@/components/HabitCard";
 import AddHabitModal from "@/components/AddHabitModal";
@@ -18,6 +18,15 @@ export default function Home() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [selectedDate, setSelectedDate] = useState(today);
   const [filterCat, setFilterCat] = useState("All");
+
+  // Keep selectedDate in sync with today (when app loads or day changes)
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (!initialized) {
+      setSelectedDate(today);
+      setInitialized(true);
+    }
+  }, [today, initialized]);
 
   const categories = ["All", ...Array.from(new Set(habits.map((h) => h.category)))];
 
@@ -53,6 +62,20 @@ export default function Home() {
     const overIdx = habits.findIndex((h) => h.id === overId);
     if (draggedIdx === -1 || overIdx === -1 || draggedIdx === overIdx) return;
     reorderHabits(draggedIdx, overIdx);
+  }
+
+  function handleMoveUp(id: string) {
+    const idx = habits.findIndex((h) => h.id === id);
+    if (idx > 0) {
+      reorderHabits(idx, idx - 1);
+    }
+  }
+
+  function handleMoveDown(id: string) {
+    const idx = habits.findIndex((h) => h.id === id);
+    if (idx < habits.length - 1) {
+      reorderHabits(idx, idx + 1);
+    }
   }
 
   function handleDragEnd() {
@@ -155,33 +178,33 @@ export default function Home() {
               </div>
             )}
 
-            {/* Habit list */}
-            <div className="mt-4 space-y-3">
-              {filtered.length === 0 ? (
-                <EmptyState onAdd={() => setModalOpen(true)} />
-              ) : (
-                <AnimatePresence>
-                  {filtered.map((habit, i) => (
-                     <motion.div
-                      key={habit.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ delay: i * 0.04, duration: 0.3 }}
-                      drag={reordering}
-                      dragConstraints={{ top: 0, bottom: 0 }}
-                      onDragStart={() => reordering && handleDragStart(habit.id)}
-                      onDragEnd={handleDragEnd}
-                      className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
-                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
-                    >
-                      <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} onDragOver={handleDragOver} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-            </div>
+      {/* Habit list */}
+      <div className="mt-4 space-y-3">
+        {filtered.length === 0 ? (
+          <EmptyState onAdd={() => setModalOpen(true)} />
+        ) : (
+          <AnimatePresence>
+            {filtered.map((habit, i) => (
+<motion.div
+                 key={habit.id}
+                 layout
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 transition={{ delay: i * 0.04, duration: 0.3 }}
+                 drag={reordering}
+                 dragConstraints={{ top: 0, bottom: 0 }}
+                 onDragStart={() => reordering && handleDragStart(habit.id)}
+                 onDragEnd={handleDragEnd}
+                 className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
+                 style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
+               >
+                  <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} onDragOver={handleDragOver} selectedDate={selectedDate} onMoveUp={handleMoveUp} onMoveDown={handleMoveDown} />
+               </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
           </>
         )}
 
