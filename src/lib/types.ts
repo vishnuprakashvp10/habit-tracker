@@ -8,6 +8,7 @@ export interface Habit {
   frequency: HabitFrequency;
   customDays?: number[]; // 0=Sun, 1=Mon...6=Sat
   createdAt: string; // ISO date string
+  order: number; // For reordering habits
   completions: Record<string, boolean>; // "YYYY-MM-DD" -> true
   streak: number;
   bestStreak: number;

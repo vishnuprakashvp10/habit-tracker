@@ -6,12 +6,13 @@ import AddHabitModal from "@/components/AddHabitModal";
 import DateStrip from "@/components/DateStrip";
 import StatsView from "@/components/StatsView";
 import { Habit } from "@/lib/types";
-import { Plus, LayoutGrid, BarChart2, Sparkles } from "lucide-react";
+import { Plus, LayoutGrid, BarChart2, Sparkles, GripVertical } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Tab = "today" | "stats";
 
 export default function Home() {
-  const { habits, today } = useHabits();
+  const { habits, today, reorderHabits } = useHabits();
   const [tab, setTab] = useState<Tab>("today");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -38,6 +39,36 @@ export default function Home() {
 
   const dateObj = new Date(selectedDate + "T00:00:00");
   const dateLabel = dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  const [reordering, setReordering] = useState(false);
+  const [dragInfo, setDragInfo] = useState<{ id: string; index: number } | null>(null);
+
+  function handleDragStart(id: string, index: number) {
+    setDragInfo({ id, index });
+  }
+
+  function handleDragEnd(targetId: string) {
+    if (!dragInfo) return;
+    const targetIndex = filtered.findIndex((h) => h.id === targetId);
+    if (targetIndex === -1 || targetIndex === dragInfo.index) {
+      setDragInfo(null);
+      return;
+    }
+    
+    // Map to full habits indices
+    const draggedHabit = habits.find((h) => h.id === dragInfo.id);
+    const targetHabit = habits.find((h) => h.id === targetId);
+    if (!draggedHabit || !targetHabit) {
+      setDragInfo(null);
+      return;
+    }
+    
+    const draggedFullIdx = habits.findIndex((h) => h.id === dragInfo.id);
+    const targetFullIdx = habits.findIndex((h) => h.id === targetId);
+    
+    reorderHabits(draggedFullIdx, targetFullIdx);
+    setDragInfo(null);
+  }
 
   return (
     <main className="min-h-screen" style={{ background: "#0a0a0f" }}>
@@ -117,16 +148,49 @@ export default function Home() {
               </div>
             )}
 
+            {/* Reorder toggle */}
+            {filtered.length > 0 && (
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={() => setReordering(!reordering)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-display transition-all"
+                  style={{
+                    background: reordering ? "#ff7b3522" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${reordering ? "#ff7b35" : "#2a2a3d"}`,
+                    color: reordering ? "#ff7b35" : "#6666aa",
+                  }}
+                >
+                  <GripVertical size={14} />
+                  {reordering ? "Exit" : "Reorder"}
+                </button>
+              </div>
+            )}
+
             {/* Habit list */}
             <div className="mt-4 space-y-3">
               {filtered.length === 0 ? (
                 <EmptyState onAdd={() => setModalOpen(true)} />
               ) : (
-                filtered.map((habit, i) => (
-                  <div key={habit.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}>
-                    <HabitCard habit={habit} onEdit={openEdit} />
-                  </div>
-                ))
+                <AnimatePresence>
+                  {filtered.map((habit, i) => (
+                     <motion.div
+                      key={habit.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ delay: i * 0.04, duration: 0.3 }}
+                      drag={reordering}
+                      dragConstraints={{ top: 0, bottom: 0 }}
+                      onDragStart={() => reordering && handleDragStart(habit.id, i)}
+                      onDragEnd={() => reordering && handleDragEnd(habit.id)}
+                      className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
+                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
+                    >
+                      <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
             </div>
           </>

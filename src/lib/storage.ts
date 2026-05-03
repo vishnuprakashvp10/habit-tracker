@@ -7,7 +7,13 @@ export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { habits: [], lastUpdated: new Date().toISOString() };
-    return JSON.parse(raw) as AppState;
+    const state = JSON.parse(raw) as AppState;
+    // Ensure order field exists for backward compatibility
+    const habits = state.habits.map((h, idx) => ({
+      ...h,
+      order: h.order ?? idx,
+    }));
+    return { ...state, habits };
   } catch {
     return { habits: [], lastUpdated: new Date().toISOString() };
   }

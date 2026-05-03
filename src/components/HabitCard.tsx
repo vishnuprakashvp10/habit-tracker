@@ -2,15 +2,16 @@
 import { useState } from "react";
 import { Habit } from "@/lib/types";
 import { useHabits } from "./HabitContext";
-import HeatmapGrid from "./HeatmapGrid";
-import { MoreVertical, Trash2, Edit3, ChevronDown, ChevronUp, Flame, Trophy, BarChart2 } from "lucide-react";
+import CalendarView from "./CalendarView";
+import { MoreVertical, Trash2, Edit3, ChevronDown, ChevronUp, Flame, Trophy, BarChart2, GripVertical } from "lucide-react";
 
 interface Props {
   habit: Habit;
   onEdit: (habit: Habit) => void;
+  reordering?: boolean;
 }
 
-export default function HabitCard({ habit, onEdit }: Props) {
+export default function HabitCard({ habit, onEdit, reordering = false }: Props) {
   const { today, toggleHabit, deleteHabit, getCompletionRate } = useHabits();
   const [menuOpen, setMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -30,24 +31,54 @@ export default function HabitCard({ habit, onEdit }: Props) {
   const color = habit.color;
   const bgColor = `${color}18`;
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (!reordering) return;
+    e.dataTransfer.setDragImage(new Image(), 0, 0);
+    const target = e.currentTarget as HTMLDivElement;
+    target.style.opacity = "0.8";
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLDivElement;
+    target.style.opacity = "1";
+  };
+
   return (
     <div
       className="relative rounded-2xl overflow-hidden transition-all duration-300"
       style={{
         background: `linear-gradient(135deg, #1a1a26 0%, #15151f 100%)`,
-        border: `1px solid ${isDone ? color + "44" : "#2a2a3d"}`,
-        boxShadow: isDone ? `0 0 20px ${color}22, inset 0 0 20px ${color}08` : "none",
+        border: reordering
+          ? `2px dashed ${color}44`
+          : `1px solid ${isDone ? color + "44" : "#2a2a3d"}`,
+        boxShadow: reordering
+          ? `0 0 20px ${color}33`
+          : isDone
+          ? `0 0 20px ${color}22, inset 0 0 20px ${color}08`
+          : "none",
       }}
+      draggable={reordering}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
       {/* Top bar */}
       <div className="flex items-center gap-3 p-4 pb-3">
+        {/* Reorder handle */}
+        {reordering && (
+          <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center opacity-50">
+            <GripVertical size={24} />
+          </div>
+        )}
+
         {/* Emoji badge */}
-        <div
-          className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-          style={{ background: bgColor, border: `1px solid ${color}33` }}
-        >
-          {habit.emoji}
-        </div>
+        {!reordering && (
+          <div
+            className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+            style={{ background: bgColor, border: `1px solid ${color}33` }}
+          >
+            {habit.emoji}
+          </div>
+        )}
 
         {/* Name + streak */}
         <div className="flex-1 min-w-0">
@@ -64,56 +95,60 @@ export default function HabitCard({ habit, onEdit }: Props) {
           </div>
         </div>
 
-        {/* Check button */}
-        <button
-          onClick={handleToggle}
-          className="relative flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
-          style={{
-            background: isDone ? color : "rgba(255,255,255,0.06)",
-            border: `2px solid ${isDone ? color : "#3a3a5a"}`,
-            boxShadow: isDone ? `0 0 16px ${color}88` : "none",
-          }}
-        >
-          {justChecked && (
-            <div
-              className="absolute inset-0 rounded-xl animate-pulse-ring"
-              style={{ border: `2px solid ${color}` }}
-            />
-          )}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#000" : "#6666aa"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
-
-        {/* Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-text-dim hover:bg-white/5 transition-colors"
-          >
-            <MoreVertical size={16} />
-          </button>
-          {menuOpen && (
-            <div
-              className="absolute right-0 top-9 z-50 rounded-xl overflow-hidden shadow-xl"
-              style={{ background: "#1e1e2e", border: "1px solid #2a2a3d", minWidth: 140 }}
+        {!reordering && (
+          <>
+            {/* Check button */}
+            <button
+              onClick={handleToggle}
+              className="relative flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-90"
+              style={{
+                background: isDone ? color : "rgba(255,255,255,0.06)",
+                border: `2px solid ${isDone ? color : "#3a3a5a"}`,
+                boxShadow: isDone ? `0 0 16px ${color}88` : "none",
+              }}
             >
+              {justChecked && (
+                <div
+                  className="absolute inset-0 rounded-xl animate-pulse-ring"
+                  style={{ border: `2px solid ${color}` }}
+                />
+              )}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isDone ? "#000" : "#6666aa"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+
+            {/* Menu */}
+            <div className="relative">
               <button
-                onClick={() => { onEdit(habit); setMenuOpen(false); }}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-text-dim hover:bg-white/5 transition-colors"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-text-dim hover:bg-white/5 transition-colors"
               >
-                <Edit3 size={14} /> Edit
+                <MoreVertical size={16} />
               </button>
-              <button
-                onClick={() => { deleteHabit(habit.id); setMenuOpen(false); }}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-white/5 transition-colors"
-                style={{ color: "#ff4444" }}
-              >
-                <Trash2 size={14} /> Delete
-              </button>
+              {menuOpen && (
+                <div
+                  className="absolute right-0 top-9 z-50 rounded-xl overflow-hidden shadow-xl"
+                  style={{ background: "#1e1e2e", border: "1px solid #2a2a3d", minWidth: 140 }}
+                >
+                  <button
+                    onClick={() => { onEdit(habit); setMenuOpen(false); }}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-text-dim hover:bg-white/5 transition-colors"
+                  >
+                    <Edit3 size={14} /> Edit
+                  </button>
+                  <button
+                    onClick={() => { deleteHabit(habit.id); setMenuOpen(false); }}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-white/5 transition-colors"
+                    style={{ color: "#ff4444" }}
+                  >
+                    <Trash2 size={14} /> Delete
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Stats row */}
@@ -125,19 +160,21 @@ export default function HabitCard({ habit, onEdit }: Props) {
       </div>
 
       {/* Expand toggle */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-center gap-1 pb-2 text-xs transition-colors"
-        style={{ color: "#4a4a6a" }}
-      >
-        {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-        {expanded ? "hide history" : "show history"}
-      </button>
+      {!reordering && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-center gap-1 pb-2 text-xs transition-colors"
+          style={{ color: "#4a4a6a" }}
+        >
+          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {expanded ? "hide history" : "show history"}
+        </button>
+      )}
 
-      {/* Heatmap */}
+      {/* Calendar view */}
       {expanded && (
         <div className="px-4 pb-4 pt-1 border-t border-white/5 animate-fade-in">
-          <HeatmapGrid habit={habit} />
+          <CalendarView habit={habit} />
         </div>
       )}
     </div>

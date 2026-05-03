@@ -1,6 +1,6 @@
 "use client";
 import { useHabits } from "./HabitContext";
-import HeatmapGrid from "./HeatmapGrid";
+import CalendarView from "./CalendarView";
 import { Flame, Trophy, BarChart2, CheckCircle } from "lucide-react";
 
 export default function StatsView() {
@@ -30,26 +30,26 @@ export default function StatsView() {
         <StatCard icon={<BarChart2 size={20} />} label="All Time" value={totalCompletions} color="#00d4ff" />
       </div>
 
-      {/* Per-habit heatmaps */}
-      <h3 className="font-display text-xs text-text-dim uppercase tracking-wider pt-2">Habit Histories</h3>
-      {habits.map((habit) => (
-        <div
-          key={habit.id}
-          className="rounded-2xl p-4"
-          style={{ background: "#1a1a26", border: "1px solid #2a2a3d" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">{habit.emoji}</span>
-            <div>
-              <p className="text-sm font-display font-bold text-text">{habit.name}</p>
-              <p className="text-xs" style={{ color: "#6666aa" }}>
-                {habit.totalCompletions} completions · {habit.streak}d streak
-              </p>
+        {/* Per-habit heatmaps */}
+        <h3 className="font-display text-xs text-text-dim uppercase tracking-wider pt-2">Habit Histories</h3>
+        {habits.map((habit) => (
+          <div
+            key={habit.id}
+            className="rounded-2xl p-4"
+            style={{ background: "#1a1a26", border: "1px solid #2a2a3d" }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">{habit.emoji}</span>
+              <div>
+                <p className="text-sm font-display font-bold text-text">{habit.name}</p>
+                <p className="text-xs" style={{ color: "#6666aa" }}>
+                  {habit.totalCompletions} completions · {habit.streak}d streak
+                </p>
+              </div>
             </div>
+            <CalendarView habit={habit} />
           </div>
-          <HeatmapGrid habit={habit} />
-        </div>
-      ))}
+        ))}
     </div>
   );
 }

@@ -7,10 +7,11 @@ import { HABIT_COLORS } from "@/lib/constants";
 interface HabitContextType {
   habits: Habit[];
   today: string;
-  addHabit: (h: Omit<Habit, "id" | "completions" | "streak" | "bestStreak" | "totalCompletions" | "createdAt">) => void;
+  addHabit: (h: Omit<Habit, "id" | "completions" | "streak" | "bestStreak" | "totalCompletions" | "createdAt" | "order">) => void;
   deleteHabit: (id: string) => void;
   toggleHabit: (id: string, date: string) => void;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
+  reorderHabits: (fromIndex: number, toIndex: number) => void;
   getCompletionRate: (habit: Habit) => number;
 }
 
@@ -22,6 +23,8 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const state = loadState();
+    // Sort by order on load
+    state.habits.sort((a, b) => a.order - b.order);
     setHabits(state.habits);
   }, []);
 
@@ -31,10 +34,11 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addHabit = useCallback(
-    (h: Omit<Habit, "id" | "completions" | "streak" | "bestStreak" | "totalCompletions" | "createdAt">) => {
+    (h: Omit<Habit, "id" | "completions" | "streak" | "bestStreak" | "totalCompletions" | "createdAt" | "order">) => {
       const newHabit: Habit = {
         ...h,
         id: crypto.randomUUID(),
+        order: habits.length,
         completions: {},
         streak: 0,
         bestStreak: 0,
@@ -77,6 +81,18 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
     [habits, persist]
   );
 
+  const reorderHabits = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      const updated = [...habits];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      // Re-assign order values
+      const reordered = updated.map((h, idx) => ({ ...h, order: idx }));
+      persist(reordered);
+    },
+    [habits, persist]
+  );
+
   const getCompletionRate = useCallback(
     (habit: Habit) => {
       const days = Object.keys(habit.completions).length;
@@ -89,7 +105,7 @@ export function HabitProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <HabitContext.Provider value={{ habits, today, addHabit, deleteHabit, toggleHabit, updateHabit, getCompletionRate }}>
+    <HabitContext.Provider value={{ habits, today, addHabit, deleteHabit, toggleHabit, updateHabit, reorderHabits, getCompletionRate }}>
       {children}
     </HabitContext.Provider>
   );

@@ -11,27 +11,21 @@ interface Props {
   editingHabit?: Habit | null;
 }
 
-type FormState = {
-  name: string;
-  emoji: string;
-  color: string;
-  frequency: HabitFrequency;
-  category: string;
-  customDays: number[];
-};
+  type FormState = Omit<Habit, "id" | "completions" | "streak" | "bestStreak" | "totalCompletions" | "createdAt"> & { customDays: number[]; order: number };
 
-const DEFAULT = {
-  name: "",
-  emoji: "💪",
-  color: HABIT_COLORS[0].value,
-  frequency: "daily" as HabitFrequency,
-  category: "Health",
-  customDays: [] as number[],
-};
+  const DEFAULT: FormState = {
+    name: "",
+    emoji: "💪",
+    color: HABIT_COLORS[0].value,
+    frequency: "daily" as HabitFrequency,
+    category: "Health",
+    customDays: [] as number[],
+    order: 0,
+  };
 
 export default function AddHabitModal({ open, onClose, editingHabit }: Props) {
-  const { addHabit, updateHabit } = useHabits();
-  const [form, setForm] = useState<FormState>({ ...DEFAULT });
+  const { habits, addHabit, updateHabit } = useHabits();
+  const [form, setForm] = useState<FormState>(() => ({ ...DEFAULT, order: habits.length }));
   const [emojiSearch, setEmojiSearch] = useState("");
 
   useEffect(() => {
@@ -43,32 +37,34 @@ export default function AddHabitModal({ open, onClose, editingHabit }: Props) {
         frequency: editingHabit.frequency,
         category: editingHabit.category,
         customDays: editingHabit.customDays || [],
+        order: editingHabit.order,
       });
     } else {
-      setForm({ ...DEFAULT });
+      setForm({ ...DEFAULT, order: habits.length });
     }
-  }, [editingHabit, open]);
+  }, [editingHabit, open, habits.length]);
 
   function handleSubmit() {
     if (!form.name.trim()) return;
     if (editingHabit) {
-      updateHabit(editingHabit.id, {
-        name: form.name,
-        emoji: form.emoji,
-        color: form.color,
-        frequency: form.frequency,
-        category: form.category,
-        customDays: form.customDays,
-      });
+        updateHabit(editingHabit.id, {
+          name: form.name,
+          emoji: form.emoji,
+          color: form.color,
+          frequency: form.frequency,
+          category: form.category,
+          customDays: form.customDays,
+          order: editingHabit.order,
+        });
     } else {
-      addHabit({
-        name: form.name,
-        emoji: form.emoji,
-        color: form.color,
-        frequency: form.frequency,
-        category: form.category,
-        customDays: form.customDays,
-      });
+       addHabit({
+         name: form.name,
+         emoji: form.emoji,
+         color: form.color,
+         frequency: form.frequency,
+         category: form.category,
+         customDays: form.customDays,
+       });
     }
     onClose();
   }
