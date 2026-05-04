@@ -192,8 +192,8 @@ export default function Home() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ delay: i * 0.04, duration: 0.3 }}
-                      drag="y"
-                      dragConstraints={{ top: -1000, bottom: 1000 }}
+                      drag={reordering ? "y" : false}
+                      dragConstraints={reordering ? { top: -1000, bottom: 1000 } : undefined}
                       onDragStart={() => reordering && handleDragStart(habit.id)}
                       onDragEnd={handleDragEnd}
                       className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
