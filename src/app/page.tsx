@@ -178,33 +178,33 @@ export default function Home() {
               </div>
             )}
 
-      {/* Habit list */}
-      <div className="mt-4 space-y-3">
-        {filtered.length === 0 ? (
-          <EmptyState onAdd={() => setModalOpen(true)} />
-        ) : (
-          <AnimatePresence>
-            {filtered.map((habit, i) => (
-<motion.div
-                 key={habit.id}
-                 layout
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: -20 }}
-                 transition={{ delay: i * 0.04, duration: 0.3 }}
-                 drag={reordering}
-                 dragConstraints={{ top: 0, bottom: 0 }}
-                 onDragStart={() => reordering && handleDragStart(habit.id)}
-                 onDragEnd={handleDragEnd}
-                 className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
-                 style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
-               >
-                  <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} onDragOver={handleDragOver} selectedDate={selectedDate} onMoveUp={handleMoveUp} onMoveDown={handleMoveDown} />
-               </motion.div>
-            ))}
-          </AnimatePresence>
-        )}
-      </div>
+            {/* Habit list */}
+            <div className="mt-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <EmptyState onAdd={() => setModalOpen(true)} />
+              ) : (
+                <AnimatePresence>
+                  {filtered.map((habit, i) => (
+                    <motion.div
+                      key={habit.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ delay: i * 0.04, duration: 0.3 }}
+                      drag="y"
+                      dragConstraints={{ top: -1000, bottom: 1000 }}
+                      onDragStart={() => reordering && handleDragStart(habit.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`animate-slide-up ${reordering ? "cursor-grab" : ""}`}
+                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
+                    >
+                      <HabitCard habit={habit} onEdit={openEdit} reordering={reordering} onDragOver={handleDragOver} selectedDate={selectedDate} onMoveUp={handleMoveUp} onMoveDown={handleMoveDown} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
           </>
         )}
 
